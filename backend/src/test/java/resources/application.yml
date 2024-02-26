@@ -1,0 +1,21 @@
+# Test-specific configuration settings
+spring:
+  profiles:
+    active: test
+
+# Database configuration for testing
+datasource:
+  url: jdbc:h2:mem:testdb
+  username: sa
+  password:
+  driver-class-name: org.h2.Driver
+
+# Hibernate configuration for testing
+jpa:
+  hibernate:
+    ddl-auto: update
+
+# Logging configuration for testing
+logging:
+  level:
+    root: INFO
