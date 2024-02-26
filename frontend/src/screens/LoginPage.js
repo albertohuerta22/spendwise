@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { login } from '../redux/actions/authActions';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
 
 function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // Initialize useNavigate hook
 
   const handleLogin = () => {
-    dispatch(login(username, password));
+    dispatch(login(username, password)).then(() => {
+      navigate('/dashboard'); // Navigate to dashboard after successful login
+    });
   };
 
   return (
