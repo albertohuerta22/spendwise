@@ -21,7 +21,7 @@ public class CategoryService {
     }
 
     public List<CategoryDTO> findAllCategoriesForUser(Long userId) {
-        List<Category> categories = categoryRepository.findAll(); // This should be modified to filter by userId
+        List<Category> categories = categoryRepository.findAll();
         return categories.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
@@ -32,6 +32,4 @@ public class CategoryService {
         dto.setDescription(category.getDescription());
         return dto;
     }
-
-    // Additional service methods
 }
