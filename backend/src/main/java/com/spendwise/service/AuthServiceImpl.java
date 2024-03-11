@@ -1,7 +1,7 @@
 package com.spendwise.service;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.spendwise.dto.AuthDTO;
 import com.spendwise.entity.Auth;
@@ -19,10 +19,10 @@ import io.jsonwebtoken.security.Keys;
 public class AuthServiceImpl implements AuthService {
 
     private final AuthRepository authRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     private final Key secretKey;
 
-    public AuthServiceImpl(AuthRepository authRepository, BCryptPasswordEncoder passwordEncoder) {
+    public AuthServiceImpl(AuthRepository authRepository, PasswordEncoder passwordEncoder) {
         this.authRepository = authRepository;
         this.passwordEncoder = passwordEncoder;
         this.secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
