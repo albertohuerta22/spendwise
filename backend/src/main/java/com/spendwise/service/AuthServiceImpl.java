@@ -1,19 +1,18 @@
 package com.spendwise.service;
 
+import com.spendwise.dto.AuthDTO;
+import com.spendwise.dto.AuthResponseDTO;
+import com.spendwise.entity.Auth;
+import com.spendwise.repository.AuthRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.spendwise.dto.AuthDTO;
-import com.spendwise.entity.Auth;
-import com.spendwise.repository.AuthRepository;
-
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.http.HttpServletRequest;
-
 import java.security.Key;
+import java.util.Date;
 import io.jsonwebtoken.security.Keys;
-
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -30,34 +29,28 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseEntity<?> login(AuthDTO authDto) {
-        String email = authDto.getEmail();
-        String password = authDto.getPassword();
-
-        Auth auth = authRepository.findByEmail(email);
-
-        // Check if the email exists in the database
+        Auth auth = authRepository.findByEmail(authDto.getEmail());
         if (auth == null) {
-            return ResponseEntity.badRequest().body("email does not exist");
+            return ResponseEntity.badRequest().body(new AuthResponseDTO("Error: Email does not exist.", null));
         }
-        
-        // Check if the password matches
-        if (passwordEncoder.matches(password, auth.getPassword())) {
-            // Generate JWT token
-            String token = Jwts.builder()
-                    .setSubject(email)
-                    .signWith(secretKey, SignatureAlgorithm.HS512)
-                    .compact();
-            // Return token in response
-            return ResponseEntity.ok().body(token);
-        } else {
-            return ResponseEntity.badRequest().body("Incorrect password");
+        if (!passwordEncoder.matches(authDto.getPassword(), auth.getPassword())) {
+            return ResponseEntity.badRequest().body(new AuthResponseDTO("Error: Incorrect password.", null));
         }
+
+        long expirationTime = 1000 * 60 * 60; // 1 hour
+        String token = Jwts.builder()
+                .setSubject(authDto.getEmail())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(secretKey, SignatureAlgorithm.HS512)
+                .compact();
+
+        return ResponseEntity.ok(new AuthResponseDTO("Login successful.", token));
     }
 
     @Override
     public ResponseEntity<?> logout(HttpServletRequest request) {
-        // Logging out usually involves deleting the token from the client-side.
-        // For example, you can clear the token from local storage in the client's browser.
-        return ResponseEntity.ok("Logout successful");
+        // Since JWT is stateless, logout is handled client-side by deleting the token.
+        return ResponseEntity.ok("Logout successful.");
     }
 }

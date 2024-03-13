@@ -24,18 +24,19 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
+     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .csrf().disable() // If you're using Postman, disabling CSRF might be necessary for testing.
             .authorizeHttpRequests((requests) -> requests
-                .requestMatchers("/", "/home").permitAll()
+                .requestMatchers("/api/auth/**").permitAll() // Allow all requests to your auth endpoints
                 .anyRequest().authenticated()
             )
-            .formLogin((form) -> form
-                .loginPage("/login")
-                .permitAll()
-            )
-            .logout((logout) -> logout.permitAll());
+            .formLogin().disable() // Disable form login
+            .logout().disable(); // Disable automatic logout
+
+        // Optional: Configure session management
+        // http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         return http.build();
     }

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -31,6 +32,7 @@ public class UserControllerTest {
     private UserService userService;
 
     @Test
+    @WithMockUser // Add this to simulate an authenticated user
     public void getAllUsers_ShouldReturnUsers() throws Exception {
         UserDTO user1 = new UserDTO(); // Initialize and set properties for user1
         UserDTO user2 = new UserDTO(); // Initialize and set properties for user2
