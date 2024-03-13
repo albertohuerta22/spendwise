@@ -1,5 +1,6 @@
 package com.spendwise.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,11 +13,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.spendwise.security.JwtTokenFilter;
 
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+     @Autowired
+    private JwtTokenFilter jwtTokenFilter;
+
 
     // Correctly define the BCryptPasswordEncoder bean
     @Bean
@@ -24,22 +32,17 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-     @Bean
+      @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf().disable() // If you're using Postman, disabling CSRF might be necessary for testing.
             .authorizeHttpRequests((requests) -> requests
-                .requestMatchers("/api/auth/**").permitAll() // Allow all requests to your auth endpoints
-                .anyRequest().authenticated()
-            )
-            .formLogin().disable() // Disable form login
-            .logout().disable(); // Disable automatic logout
-
-        // Optional: Configure session management
-        // http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
+                .requestMatchers("/api/auth/**").permitAll() // Allow requests to your auth endpoints.
+                .anyRequest().authenticated()) // Require authentication for any other request.
+            .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
+            
         return http.build();
     }
+
 
     // Updated userDetailsService method
     @Bean
@@ -48,9 +51,11 @@ public class SecurityConfig {
                 org.springframework.security.core.userdetails.User.builder()
                 .username("email")
                 .password(passwordEncoder.encode("password"))
-                .roles("USER") // Specify roles here
+                //.roles
                 .build();
 
         return new InMemoryUserDetailsManager(user);
     }
+
+
 }
