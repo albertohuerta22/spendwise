@@ -5,11 +5,11 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,7 +18,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.ArrayList;
 
 @Component
 public class JwtTokenFilter extends OncePerRequestFilter {
@@ -33,23 +35,27 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         final String header = request.getHeader("Authorization");
 
         if (header == null || !header.startsWith("Bearer ")) {
-            chain.doFilter(request, response); // Go to the next filter in the chain
+            chain.doFilter(request, response); // If no token is present, continue down the filter chain
             return;
         }
 
         final String token = header.split(" ")[1].trim();
         if (!validateToken(token)) {
-            chain.doFilter(request, response); // If token is invalid, go to the next filter
+            chain.doFilter(request, response); // If the token is invalid, continue down the filter chain
             return;
         }
 
         // Extract claims and set up Spring Security Context
-        Key key = Keys.hmacShaKeyFor(secret.getBytes());
+        Key key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
         Claims claims = claimsJws.getBody();
-        String username = claims.getSubject();
+        String email = claims.getSubject();
 
-        UserDetails userDetails = User.builder().username(username).authorities("USER").build(); // Placeholder for actual user lookup
+        // Setting up UserDetails without authorities for now
+        UserDetails userDetails = User.withUsername(email)
+                                      .password("") // Password is not needed for authentication but must be non-null
+                                      .authorities(new ArrayList<>()) // No authorities or roles
+                                      .build();
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
@@ -62,7 +68,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     private boolean validateToken(String token) {
         // Implement token validation logic here
-        // For now, we just return true assuming token is always valid
+        // For simplicity, this implementation assumes all tokens are valid
+        // You should add your token validation logic (e.g., checking expiration)
         return true;
     }
 }
